@@ -1,0 +1,16 @@
+# Binaries and Executables
+# (Assuming your executable is named 'bestagon', add whatever name you use)
+bestagon
+*.exe
+
+# OS-Specific generated files
+.DS_Store
+Thumbs.db
+
+# Steamworks Binaries (Don't commit these!)
+*.so
+*.dll
+*.dylib
+
+# Steam Dev Config
+steam_appid.txt
