@@ -4,7 +4,7 @@ import (
 	"math"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
-	//steamworks "github.com/hajimehoshi/go-steamworks"
+	//steamworks "github.com/hajimehoshi/go-steamworks" //steam sdk
 )
 
 type Vector2 struct {
@@ -78,7 +78,7 @@ func (s *Star) Update(playerPos Vector2) {
 func drawHexagon(centerX, centerY, radius float32, color rl.Color) {
 	// Draw a hexagon with 6 vertices
 	numSides := 6
-	for i := 0; i < numSides; i++ {
+	for i := range numSides {
 		angle1 := float32(i) * 2 * math.Pi / float32(numSides)
 		angle2 := float32(i+1) * 2 * math.Pi / float32(numSides)
 
@@ -94,7 +94,7 @@ func drawHexagon(centerX, centerY, radius float32, color rl.Color) {
 func drawStar(centerX, centerY, radius float32, color rl.Color) {
 	// Draw a 5-pointed star
 	numPoints := 5
-	for i := 0; i < numPoints; i++ {
+	for i := range numPoints {
 		// Outer point
 		angle1 := float32(i) * 2 * math.Pi / float32(numPoints)
 		x1 := centerX + radius*float32(math.Cos(float64(angle1)))
@@ -155,7 +155,7 @@ func main() {
 	// 4. Game Loop
 	// ---------------------------------------------------------
 	for !rl.WindowShouldClose() {
-		//steamworks.RunCallbacks()
+		//steamworks.RunCallbacks() //steam sdk
 
 		// Update
 		player.Update()
