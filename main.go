@@ -18,7 +18,19 @@ type Player struct {
 	Radius   float32
 }
 
-type Star struct {
+type StarR struct {
+	Position Vector2
+	Radius   float32
+	Speed    float32
+}
+
+type StarL struct {
+	Position Vector2
+	Radius   float32
+	Speed    float32
+}
+
+type StarB struct {
 	Position Vector2
 	Radius   float32
 	Speed    float32
@@ -65,10 +77,30 @@ func (p *Player) Update() {
 	}
 }
 
-func (s *Star) Update(playerPos Vector2) {
+func (s *StarR) Update(playerPos Vector2) {
 	// Target position is to the right of the player
 	targetX := playerPos.X + 40
-	targetY := playerPos.Y
+	targetY := playerPos.Y - 20
+
+	// Smoothly lerp towards target for springy, bouncy movement
+	s.Position.X += (targetX - s.Position.X) * s.Speed
+	s.Position.Y += (targetY - s.Position.Y) * s.Speed
+}
+
+func (s *StarL) Update(playerPos Vector2) {
+	// Target position is to the right of the player
+	targetX := playerPos.X - 40
+	targetY := playerPos.Y - 20
+
+	// Smoothly lerp towards target for springy, bouncy movement
+	s.Position.X += (targetX - s.Position.X) * s.Speed
+	s.Position.Y += (targetY - s.Position.Y) * s.Speed
+}
+
+func (s *StarB) Update(playerPos Vector2) {
+	// Target position is below the player
+	targetX := playerPos.X
+	targetY := playerPos.Y + float32(math.Sqrt(math.Pow(20, 2)+math.Pow(40, 2)))
 
 	// Smoothly lerp towards target for springy, bouncy movement
 	s.Position.X += (targetX - s.Position.X) * s.Speed
@@ -145,8 +177,20 @@ func main() {
 		Radius:   20,
 	}
 
-	star := Star{
-		Position: Vector2{X: 680, Y: 360}, // 40 pixels to the right of player
+	starR := StarR{
+		Position: Vector2{X: 680, Y: 340}, // 40 pixels to the right, 20 pixels up
+		Radius:   8,
+		Speed:    0.2, // Lerp factor (0-1), lower = springier with more delay
+	}
+
+	starL := StarL{
+		Position: Vector2{X: 600, Y: 340}, // 40 pixels to the right of player, 20 pixels up
+		Radius:   8,
+		Speed:    0.2, // Lerp factor (0-1), lower = springier with more delay
+	}
+
+	starB := StarB{
+		Position: Vector2{X: 640, Y: 400}, // 45 pixels down
 		Radius:   8,
 		Speed:    0.2, // Lerp factor (0-1), lower = springier with more delay
 	}
@@ -159,17 +203,21 @@ func main() {
 
 		// Update
 		player.Update()
-		star.Update(player.Position)
+		starR.Update(player.Position)
+		starL.Update(player.Position)
+		starB.Update(player.Position)
 
 		// Draw
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color{R: 20, G: 20, B: 30, A: 255})
 
 		// Draw player (hexagon)
-		drawHexagon(player.Position.X, player.Position.Y, player.Radius, rl.Green)
+		drawHexagon(player.Position.X, player.Position.Y, player.Radius, rl.Magenta)
 
 		// Draw star
-		drawStar(star.Position.X, star.Position.Y, star.Radius, rl.Yellow)
+		drawStar(starR.Position.X, starR.Position.Y, starR.Radius, rl.Yellow)
+		drawStar(starL.Position.X, starL.Position.Y, starL.Radius, rl.SkyBlue)
+		drawStar(starB.Position.X, starB.Position.Y, starB.Radius, rl.Green)
 
 		// Draw UI
 		rl.DrawText("BESTAGON", 10, 10, 30, rl.Green)
