@@ -1,10 +1,12 @@
 # Bestagon
 
-Go game to be with raylib.
+Go game to be in raylib.
 
 ## Core mechanics
 
 Bestagon the hexagon is fighting evil squares with the help oh his magic stars. He can only fight while his star power lasts. Squares of a certain colour can only be damaged by a star of the same colour. Enemies get tougher over time, but the money gained from defeating them can let you buy upgrades to get stronger!
+
+![screenshot](./screenshot.png)
 
 ## How to add the steam SDK later
 
