@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	github.com/gen2brain/raylib-go/raylib v0.55.1
-	github.com/hajimehoshi/go-steamworks v0.0.0-20251207152439-f178e387e2a4
+//github.com/hajimehoshi/go-steamworks v0.0.0-20251207152439-f178e387e2a4
 )
 
 require (

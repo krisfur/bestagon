@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"math"
-	"runtime"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
-	steamworks "github.com/hajimehoshi/go-steamworks"
+	//steamworks "github.com/hajimehoshi/go-steamworks"
 )
 
 type Vector2 struct {
@@ -118,16 +116,16 @@ func drawStar(centerX, centerY, radius float32, color rl.Color) {
 }
 
 func main() {
-	// ---------------------------------------------------------
-	// 1. Initialize Steamworks
-	// ---------------------------------------------------------
-	runtime.LockOSThread()
+	// // ---------------------------------------------------------
+	// // 1. Initialize Steamworks
+	// // ---------------------------------------------------------
+	// runtime.LockOSThread()
 
-	if err := steamworks.Init(); err != nil {
-		panic(fmt.Sprintf("Steamworks failed to initialize: %v\nMake sure Steam is running and steam_appid.txt is present.", err))
-	}
+	// if err := steamworks.Init(); err != nil {
+	// 	panic(fmt.Sprintf("Steamworks failed to initialize: %v\nMake sure Steam is running and steam_appid.txt is present.", err))
+	// }
 
-	fmt.Println("Steamworks initialized successfully!")
+	// fmt.Println("Steamworks initialized successfully!")
 
 	// ---------------------------------------------------------
 	// 2. Initialize Raylib
@@ -157,7 +155,7 @@ func main() {
 	// 4. Game Loop
 	// ---------------------------------------------------------
 	for !rl.WindowShouldClose() {
-		steamworks.RunCallbacks()
+		//steamworks.RunCallbacks()
 
 		// Update
 		player.Update()
