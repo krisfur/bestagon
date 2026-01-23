@@ -4,7 +4,7 @@ Go game to be with raylib.
 
 ## How to add the steam SDK later
 
-in imports add:
+1. in imports add:
 
 ```go
 import (
@@ -13,7 +13,7 @@ import (
 )
 ```
 
-at the start of main add:
+2. at the start of main add:
 
 ```go
 	// ---------------------------------------------------------
@@ -28,7 +28,7 @@ at the start of main add:
 	fmt.Println("Steamworks initialized successfully!")
 ```
 
-inside the game loop add:
+3. inside the game loop add:
 
 ```go
 	// ---------------------------------------------------------
@@ -36,11 +36,12 @@ inside the game loop add:
 	// ---------------------------------------------------------
 	for !rl.WindowShouldClose() {
 		steamworks.RunCallbacks()
-````
+```
 
-1. Download the steam SDK [here](https://partner.steamgames.com/doc/sdk)
-2. Copy libsteam_api.so (Linux) or steam_api64.dll (Windows) to the root folder.
-3. Create a steam_appid.txt file containing 480.
+4. uncomment go-steamworks from `go.mod`
+5. Download the steam SDK [here](https://partner.steamgames.com/doc/sdk)
+6. Copy libsteam_api.so (Linux) or steam_api64.dll (Windows) to the root folder.
+7. Create a steam_appid.txt file containing 480.
 
 Then with steam running in the background simply run:
 
