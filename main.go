@@ -48,6 +48,16 @@ type Enemy struct {
 	Color     int // 0 = Red (StarR), 1 = SkyBlue (StarL), 2 = Green (StarB)
 }
 
+type Screen int
+
+const (
+	ScreenMenu Screen = iota
+	ScreenPlaying
+	ScreenUpgrades
+	ScreenGameOver
+	ScreenPaused
+)
+
 type GameState struct {
 	Player          Player
 	StarR           StarR
@@ -59,7 +69,10 @@ type GameState struct {
 	EnemySpawnRate  float32
 	SpawnTimer      float32
 	BaseEnemyHealth float32
-	GameOver        bool
+	CurrentScreen   Screen
+	MenuSelection   int // 0 = Fight, 1 = Upgrades, 2 = Exit
+	PauseSelection  int // 0 = Continue, 1 = Exit
+	SkillTreeTab    int // 0 = Red, 1 = Blue, 2 = Green
 	Score           int
 	SessionCurrency int64   // Currency earned this run
 	TotalCurrency   int64   // Total persistent currency (£)
@@ -339,15 +352,97 @@ func (gs *GameState) CheckCollisions() {
 	}
 }
 
-func (gs *GameState) Update() {
-	if gs.GameOver {
-		if rl.IsKeyPressed(rl.KeySpace) {
+func (gs *GameState) UpdateMenuInput() (shouldExit bool) {
+	if rl.IsKeyPressed(rl.KeyUp) || rl.IsKeyPressed(rl.KeyW) {
+		gs.MenuSelection--
+		if gs.MenuSelection < 0 {
+			gs.MenuSelection = 2
+		}
+	}
+	if rl.IsKeyPressed(rl.KeyDown) || rl.IsKeyPressed(rl.KeyS) {
+		gs.MenuSelection++
+		if gs.MenuSelection > 2 {
+			gs.MenuSelection = 0
+		}
+	}
+	if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeySpace) {
+		switch gs.MenuSelection {
+		case 0: // Fight - start new run
 			persistentCurrency := gs.TotalCurrency
 			*gs = createGameState(persistentCurrency)
+			gs.CurrentScreen = ScreenPlaying
+		case 1: // Upgrades
+			gs.CurrentScreen = ScreenUpgrades
+		case 2: // Exit
+			return true
 		}
-		return
+	}
+	return false
+}
+
+func (gs *GameState) UpdateUpgradesInput() {
+	// Tab navigation between skill trees
+	if rl.IsKeyPressed(rl.KeyLeft) || rl.IsKeyPressed(rl.KeyA) {
+		gs.SkillTreeTab--
+		if gs.SkillTreeTab < 0 {
+			gs.SkillTreeTab = 2
+		}
+	}
+	if rl.IsKeyPressed(rl.KeyRight) || rl.IsKeyPressed(rl.KeyD) {
+		gs.SkillTreeTab++
+		if gs.SkillTreeTab > 2 {
+			gs.SkillTreeTab = 0
+		}
+	}
+	// Back to menu
+	if rl.IsKeyPressed(rl.KeyEscape) || rl.IsKeyPressed(rl.KeyBackspace) {
+		gs.CurrentScreen = ScreenMenu
+	}
+}
+
+func (gs *GameState) UpdatePauseInput() {
+	if rl.IsKeyPressed(rl.KeyUp) || rl.IsKeyPressed(rl.KeyW) {
+		gs.PauseSelection = 0
+	}
+	if rl.IsKeyPressed(rl.KeyDown) || rl.IsKeyPressed(rl.KeyS) {
+		gs.PauseSelection = 1
+	}
+	if rl.IsKeyPressed(rl.KeyEscape) {
+		// Escape again resumes
+		gs.CurrentScreen = ScreenPlaying
+	}
+	if rl.IsKeyPressed(rl.KeyEnter) || rl.IsKeyPressed(rl.KeySpace) {
+		if gs.PauseSelection == 0 {
+			// Continue
+			gs.CurrentScreen = ScreenPlaying
+		} else {
+			// Exit to main menu
+			gs.CurrentScreen = ScreenMenu
+			gs.MenuSelection = 0
+		}
+	}
+}
+
+func (gs *GameState) Update() (shouldExit bool) {
+	switch gs.CurrentScreen {
+	case ScreenMenu, ScreenGameOver:
+		return gs.UpdateMenuInput()
+	case ScreenUpgrades:
+		gs.UpdateUpgradesInput()
+		return false
+	case ScreenPaused:
+		gs.UpdatePauseInput()
+		return false
+	case ScreenPlaying:
+		// Check for pause
+		if rl.IsKeyPressed(rl.KeyEscape) {
+			gs.CurrentScreen = ScreenPaused
+			gs.PauseSelection = 0
+			return false
+		}
 	}
 
+	// Game logic (only runs when playing)
 	gs.Player.Update()
 	gs.StarR.Update(gs.Player.Position)
 	gs.StarL.Update(gs.Player.Position)
@@ -365,7 +460,7 @@ func (gs *GameState) Update() {
 	gs.StarPower -= 0.5
 	if gs.StarPower < 0 {
 		gs.StarPower = 0
-		gs.GameOver = true
+		gs.CurrentScreen = ScreenGameOver
 	}
 
 	gs.ElapsedTime += 1.0 / 60.0
@@ -378,71 +473,208 @@ func (gs *GameState) Update() {
 	if gs.EnemySpawnRate < 0.5 {
 		gs.EnemySpawnRate = 0.5
 	}
+
+	return false
+}
+
+func (gs *GameState) DrawMenu(isGameOver bool) {
+	centerX := int32(rl.GetScreenWidth() / 2)
+	centerY := int32(rl.GetScreenHeight() / 2)
+
+	// Title
+	rl.DrawText("BESTAGON", centerX-120, 80, 50, rl.Magenta)
+
+	// Show game over stats if coming from a run
+	if isGameOver {
+		rl.DrawText("RUN COMPLETE", centerX-130, centerY-150, 40, rl.Red)
+
+		scoreStr := fmt.Sprintf("Score: %d", gs.Score)
+		rl.DrawText(scoreStr, centerX-80, centerY-100, 30, rl.White)
+
+		earnedStr := fmt.Sprintf("Earned: £%d", gs.SessionCurrency)
+		rl.DrawText(earnedStr, centerX-90, centerY-60, 25, rl.Gold)
+	}
+
+	// Currency display
+	totalStr := fmt.Sprintf("£%d", gs.TotalCurrency)
+	rl.DrawText(totalStr, centerX-50, centerY-10, 40, rl.Gold)
+
+	// Menu buttons
+	buttonY := centerY + 60
+	colors := []rl.Color{rl.Gray, rl.Gray, rl.Gray}
+	colors[gs.MenuSelection] = rl.Green
+
+	// Fight button
+	rl.DrawRectangleLines(centerX-100, buttonY, 200, 50, colors[0])
+	rl.DrawText("FIGHT", centerX-35, buttonY+15, 25, colors[0])
+
+	// Upgrades button
+	rl.DrawRectangleLines(centerX-100, buttonY+70, 200, 50, colors[1])
+	rl.DrawText("UPGRADES", centerX-55, buttonY+85, 25, colors[1])
+
+	// Exit button
+	rl.DrawRectangleLines(centerX-100, buttonY+140, 200, 50, colors[2])
+	rl.DrawText("EXIT", centerX-25, buttonY+155, 25, colors[2])
+
+	// Controls hint
+	rl.DrawText("W/S or Up/Down to select, Enter to confirm", centerX-200, int32(rl.GetScreenHeight())-50, 16, rl.White)
+}
+
+func (gs *GameState) DrawUpgrades() {
+	centerX := int32(rl.GetScreenWidth() / 2)
+	screenWidth := int32(rl.GetScreenWidth())
+
+	// Title
+	rl.DrawText("UPGRADES", centerX-100, 30, 40, rl.Gold)
+
+	// Currency display
+	totalStr := fmt.Sprintf("£%d", gs.TotalCurrency)
+	rl.DrawText(totalStr, screenWidth-150, 30, 30, rl.Gold)
+
+	// Skill tree tabs
+	tabWidth := int32(200)
+	tabHeight := int32(40)
+	tabY := int32(100)
+	tabColors := []rl.Color{rl.Red, rl.SkyBlue, rl.Green}
+	tabNames := []string{"RED STAR", "BLUE STAR", "GREEN STAR"}
+
+	for i := 0; i < 3; i++ {
+		tabX := centerX - int32(300) + int32(i)*tabWidth
+		color := tabColors[i]
+		if gs.SkillTreeTab != i {
+			color = rl.Color{R: color.R / 3, G: color.G / 3, B: color.B / 3, A: 255}
+		}
+		rl.DrawRectangle(tabX, tabY, tabWidth-10, tabHeight, color)
+		rl.DrawText(tabNames[i], tabX+40, tabY+10, 20, rl.White)
+	}
+
+	// Skill tree area
+	treeY := tabY + tabHeight + 20
+	treeHeight := int32(400)
+	activeColor := tabColors[gs.SkillTreeTab]
+
+	rl.DrawRectangleLines(centerX-290, treeY, 580, treeHeight, activeColor)
+
+	// Placeholder skill nodes
+	nodeSize := int32(60)
+	nodeSpacing := int32(100)
+
+	// Draw a simple tree structure (placeholder)
+	// Top node
+	rl.DrawRectangleLines(centerX-nodeSize/2, treeY+30, nodeSize, nodeSize, activeColor)
+	rl.DrawText("?", centerX-8, treeY+50, 25, activeColor)
+
+	// Second row (2 nodes)
+	rl.DrawRectangleLines(centerX-nodeSpacing-nodeSize/2, treeY+30+nodeSpacing, nodeSize, nodeSize, rl.Gray)
+	rl.DrawText("?", centerX-nodeSpacing-8, treeY+50+nodeSpacing, 25, rl.Gray)
+
+	rl.DrawRectangleLines(centerX+nodeSpacing-nodeSize/2, treeY+30+nodeSpacing, nodeSize, nodeSize, rl.Gray)
+	rl.DrawText("?", centerX+nodeSpacing-8, treeY+50+nodeSpacing, 25, rl.Gray)
+
+	// Third row (3 nodes)
+	rl.DrawRectangleLines(centerX-nodeSpacing*2-nodeSize/2, treeY+30+nodeSpacing*2, nodeSize, nodeSize, rl.Gray)
+	rl.DrawText("?", centerX-nodeSpacing*2-8, treeY+50+nodeSpacing*2, 25, rl.Gray)
+
+	rl.DrawRectangleLines(centerX-nodeSize/2, treeY+30+nodeSpacing*2, nodeSize, nodeSize, rl.Gray)
+	rl.DrawText("?", centerX-8, treeY+50+nodeSpacing*2, 25, rl.Gray)
+
+	rl.DrawRectangleLines(centerX+nodeSpacing*2-nodeSize/2, treeY+30+nodeSpacing*2, nodeSize, nodeSize, rl.Gray)
+	rl.DrawText("?", centerX+nodeSpacing*2-8, treeY+50+nodeSpacing*2, 25, rl.Gray)
+
+	// Draw connecting lines
+	rl.DrawLine(centerX, treeY+30+nodeSize, centerX-nodeSpacing, treeY+30+nodeSpacing, rl.Gray)
+	rl.DrawLine(centerX, treeY+30+nodeSize, centerX+nodeSpacing, treeY+30+nodeSpacing, rl.Gray)
+
+	// Controls hint
+	rl.DrawText("A/D or Left/Right to switch trees, Escape to go back", centerX-230, int32(rl.GetScreenHeight())-50, 16, rl.White)
+}
+
+func (gs *GameState) DrawPlaying() {
+	drawHexagon(gs.Player.Position.X, gs.Player.Position.Y, gs.Player.Radius, rl.Magenta)
+
+	drawStar(gs.StarR.Position.X, gs.StarR.Position.Y, gs.StarR.Radius, rl.Red)
+	drawStar(gs.StarL.Position.X, gs.StarL.Position.Y, gs.StarL.Radius, rl.SkyBlue)
+	drawStar(gs.StarB.Position.X, gs.StarB.Position.Y, gs.StarB.Radius, rl.Green)
+
+	for _, enemy := range gs.Enemies {
+		var enemyColor rl.Color
+		switch enemy.Color {
+		case 0:
+			enemyColor = rl.Red
+		case 1:
+			enemyColor = rl.SkyBlue
+		case 2:
+			enemyColor = rl.Green
+		default:
+			enemyColor = rl.Red
+		}
+
+		drawSquare(enemy.Position.X, enemy.Position.Y, enemy.Size, enemyColor)
+
+		barWidth := float32(enemy.Size)
+		drawHealthBar(enemy.Position.X-barWidth/2, enemy.Position.Y-enemy.Size/2-15, barWidth, 5, enemy.Health, enemy.MaxHealth, rl.Lime)
+	}
+
+	barWidth := float32(400)
+	barHeight := float32(30)
+	barX := float32(rl.GetScreenWidth())/2 - barWidth/2
+	barY := float32(50)
+
+	drawHealthBar(barX, barY, barWidth, barHeight, gs.StarPower, gs.MaxStarPower, rl.Gold)
+	rl.DrawText("STAR POWER", int32(barX+10), int32(barY+6), 16, rl.White)
+
+	rl.DrawText("BESTAGON", 10, 10, 30, rl.Green)
+	rl.DrawText("WASD or Arrows to move", 10, 90, 20, rl.White)
+
+	currencyStr := fmt.Sprintf("£%d", gs.TotalCurrency)
+	rl.DrawText(currencyStr, int32(rl.GetScreenWidth())-150, 10, 20, rl.Gold)
+
+	sessionStr := fmt.Sprintf("Session: £%d", gs.SessionCurrency)
+	rl.DrawText(sessionStr, int32(rl.GetScreenWidth())-150, 40, 16, rl.Red)
+}
+
+func (gs *GameState) DrawPaused() {
+	// Draw the game in the background (frozen)
+	gs.DrawPlaying()
+
+	// Semi-transparent overlay
+	rl.DrawRectangle(0, 0, int32(rl.GetScreenWidth()), int32(rl.GetScreenHeight()), rl.Color{R: 0, G: 0, B: 0, A: 180})
+
+	centerX := int32(rl.GetScreenWidth() / 2)
+	centerY := int32(rl.GetScreenHeight() / 2)
+
+	rl.DrawText("PAUSED", centerX-80, centerY-100, 50, rl.White)
+
+	// Pause menu buttons
+	colors := []rl.Color{rl.Gray, rl.Gray}
+	colors[gs.PauseSelection] = rl.Green
+
+	// Continue button
+	rl.DrawRectangleLines(centerX-100, centerY-20, 200, 50, colors[0])
+	rl.DrawText("CONTINUE", centerX-55, centerY-5, 25, colors[0])
+
+	// Exit button
+	rl.DrawRectangleLines(centerX-100, centerY+50, 200, 50, colors[1])
+	rl.DrawText("EXIT", centerX-25, centerY+65, 25, colors[1])
+
+	rl.DrawText("Press Escape to resume", centerX-110, centerY+130, 16, rl.White)
 }
 
 func (gs *GameState) Draw() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.Color{R: 20, G: 20, B: 30, A: 255})
 
-	if !gs.GameOver {
-		drawHexagon(gs.Player.Position.X, gs.Player.Position.Y, gs.Player.Radius, rl.Magenta)
-
-		drawStar(gs.StarR.Position.X, gs.StarR.Position.Y, gs.StarR.Radius, rl.Red)
-		drawStar(gs.StarL.Position.X, gs.StarL.Position.Y, gs.StarL.Radius, rl.SkyBlue)
-		drawStar(gs.StarB.Position.X, gs.StarB.Position.Y, gs.StarB.Radius, rl.Green)
-
-		for _, enemy := range gs.Enemies {
-			// Draw enemy with color matching the star that can damage it
-			var enemyColor rl.Color
-			switch enemy.Color {
-			case 0: // Red (matching StarR)
-				enemyColor = rl.Red
-			case 1: // SkyBlue (matching StarL)
-				enemyColor = rl.SkyBlue
-			case 2: // Green (matching StarB)
-				enemyColor = rl.Green
-			default:
-				enemyColor = rl.Red
-			}
-
-			drawSquare(enemy.Position.X, enemy.Position.Y, enemy.Size, enemyColor)
-
-			barWidth := float32(enemy.Size)
-			drawHealthBar(enemy.Position.X-barWidth/2, enemy.Position.Y-enemy.Size/2-15, barWidth, 5, enemy.Health, enemy.MaxHealth, rl.Lime)
-		}
-
-		barWidth := float32(400)
-		barHeight := float32(30)
-		barX := float32(rl.GetScreenWidth())/2 - barWidth/2
-		barY := float32(50)
-
-		drawHealthBar(barX, barY, barWidth, barHeight, gs.StarPower, gs.MaxStarPower, rl.Gold)
-		rl.DrawText("STAR POWER", int32(barX+10), int32(barY+6), 16, rl.White)
-
-		rl.DrawText("BESTAGON", 10, 10, 30, rl.Green)
-		rl.DrawText("WASD or Arrows to move", 10, 90, 20, rl.White)
-
-		// Draw persistent currency at top right
-		currencyStr := fmt.Sprintf("£%d", gs.TotalCurrency)
-		rl.DrawText(currencyStr, int32(rl.GetScreenWidth())-150, 10, 20, rl.Gold)
-
-		// Draw session currency earned this run
-		sessionStr := fmt.Sprintf("Session: £%d", gs.SessionCurrency)
-		rl.DrawText(sessionStr, int32(rl.GetScreenWidth())-150, 40, 16, rl.Red)
-
-	} else {
-		rl.DrawText("GAME OVER", int32(rl.GetScreenWidth()/2-150), int32(rl.GetScreenHeight()/2-80), 60, rl.Red)
-
-		scoreStr := fmt.Sprintf("Score: %d", gs.Score)
-		rl.DrawText(scoreStr, int32(rl.GetScreenWidth()/2-80), int32(rl.GetScreenHeight()/2-10), 30, rl.White)
-
-		currencyStr := fmt.Sprintf("Earned: £%d", gs.SessionCurrency)
-		rl.DrawText(currencyStr, int32(rl.GetScreenWidth()/2-100), int32(rl.GetScreenHeight()/2+40), 30, rl.Gold)
-
-		totalStr := fmt.Sprintf("Total: £%d", gs.TotalCurrency)
-		rl.DrawText(totalStr, int32(rl.GetScreenWidth()/2-90), int32(rl.GetScreenHeight()/2+80), 30, rl.Gold)
-
-		rl.DrawText("Press SPACE to restart", int32(rl.GetScreenWidth()/2-150), int32(rl.GetScreenHeight()/2+140), 25, rl.Red)
+	switch gs.CurrentScreen {
+	case ScreenMenu:
+		gs.DrawMenu(false)
+	case ScreenGameOver:
+		gs.DrawMenu(true)
+	case ScreenUpgrades:
+		gs.DrawUpgrades()
+	case ScreenPlaying:
+		gs.DrawPlaying()
+	case ScreenPaused:
+		gs.DrawPaused()
 	}
 
 	rl.EndDrawing()
@@ -477,7 +709,10 @@ func createGameState(persistentCurrency int64) GameState {
 		EnemySpawnRate:  2.0,
 		SpawnTimer:      2.0,
 		BaseEnemyHealth: 20.0,
-		GameOver:        false,
+		CurrentScreen:   ScreenMenu,
+		MenuSelection:   0,
+		PauseSelection:  0,
+		SkillTreeTab:    0,
 		Score:           0,
 		SessionCurrency: 0,
 		TotalCurrency:   persistentCurrency,
@@ -490,12 +725,15 @@ func main() {
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60)
+	rl.SetExitKey(0) // Disable default Escape-to-close behavior
 
 	persistentCurrency := loadCurrency()
 	gameState := createGameState(persistentCurrency)
 
 	for !rl.WindowShouldClose() {
-		gameState.Update()
+		if gameState.Update() {
+			break // Exit requested
+		}
 		gameState.Draw()
 	}
 }
