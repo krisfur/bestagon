@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -46,7 +45,7 @@ type Enemy struct {
 	Size      float32
 	Health    float32
 	MaxHealth float32
-	Color     int // 0 = Yellow (StarR), 1 = SkyBlue (StarL), 2 = Green (StarB)
+	Color     int // 0 = Red (StarR), 1 = SkyBlue (StarL), 2 = Green (StarB)
 }
 
 type GameState struct {
@@ -81,7 +80,7 @@ func getSaveFilePath() string {
 
 func loadCurrency() int64 {
 	saveFile := getSaveFilePath()
-	data, err := ioutil.ReadFile(saveFile)
+	data, err := os.ReadFile(saveFile)
 	if err != nil {
 		return 0 // No save file, start with 0
 	}
@@ -103,7 +102,7 @@ func saveCurrency(amount int64) error {
 	}
 
 	saveFile := getSaveFilePath()
-	return ioutil.WriteFile(saveFile, jsonData, 0644)
+	return os.WriteFile(saveFile, jsonData, 0644)
 }
 
 func (p *Player) Update() {
@@ -388,7 +387,7 @@ func (gs *GameState) Draw() {
 	if !gs.GameOver {
 		drawHexagon(gs.Player.Position.X, gs.Player.Position.Y, gs.Player.Radius, rl.Magenta)
 
-		drawStar(gs.StarR.Position.X, gs.StarR.Position.Y, gs.StarR.Radius, rl.Yellow)
+		drawStar(gs.StarR.Position.X, gs.StarR.Position.Y, gs.StarR.Radius, rl.Red)
 		drawStar(gs.StarL.Position.X, gs.StarL.Position.Y, gs.StarL.Radius, rl.SkyBlue)
 		drawStar(gs.StarB.Position.X, gs.StarB.Position.Y, gs.StarB.Radius, rl.Green)
 
@@ -396,8 +395,8 @@ func (gs *GameState) Draw() {
 			// Draw enemy with color matching the star that can damage it
 			var enemyColor rl.Color
 			switch enemy.Color {
-			case 0: // Yellow (matching StarR)
-				enemyColor = rl.Yellow
+			case 0: // Red (matching StarR)
+				enemyColor = rl.Red
 			case 1: // SkyBlue (matching StarL)
 				enemyColor = rl.SkyBlue
 			case 2: // Green (matching StarB)
@@ -429,7 +428,7 @@ func (gs *GameState) Draw() {
 
 		// Draw session currency earned this run
 		sessionStr := fmt.Sprintf("Session: £%d", gs.SessionCurrency)
-		rl.DrawText(sessionStr, int32(rl.GetScreenWidth())-150, 40, 16, rl.Yellow)
+		rl.DrawText(sessionStr, int32(rl.GetScreenWidth())-150, 40, 16, rl.Red)
 
 	} else {
 		rl.DrawText("GAME OVER", int32(rl.GetScreenWidth()/2-150), int32(rl.GetScreenHeight()/2-80), 60, rl.Red)
@@ -443,7 +442,7 @@ func (gs *GameState) Draw() {
 		totalStr := fmt.Sprintf("Total: £%d", gs.TotalCurrency)
 		rl.DrawText(totalStr, int32(rl.GetScreenWidth()/2-90), int32(rl.GetScreenHeight()/2+80), 30, rl.Gold)
 
-		rl.DrawText("Press SPACE to restart", int32(rl.GetScreenWidth()/2-150), int32(rl.GetScreenHeight()/2+140), 25, rl.Yellow)
+		rl.DrawText("Press SPACE to restart", int32(rl.GetScreenWidth()/2-150), int32(rl.GetScreenHeight()/2+140), 25, rl.Red)
 	}
 
 	rl.EndDrawing()
