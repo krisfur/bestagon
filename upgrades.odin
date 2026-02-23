@@ -286,6 +286,17 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	tab_names := [3]cstring{"RED STAR", "GREEN STAR", "BLUE STAR"}
 	tab_order := [3]Upgrade_Tab{.Red, .Green, .Blue}
 
+	key_hint_size: i32 = 28
+	key_hint_y := tab_y - key_hint_size - 10
+	left_key_x := tree_x + 10
+	right_key_x := tree_x + tree_w - key_hint_size - 10
+	rl.DrawRectangle(left_key_x, key_hint_y, key_hint_size, key_hint_size, rl.DARKGRAY)
+	rl.DrawRectangleLines(left_key_x, key_hint_y, key_hint_size, key_hint_size, rl.BLACK)
+	rl.DrawText("Q", left_key_x+8, key_hint_y+4, 20, rl.WHITE)
+	rl.DrawRectangle(right_key_x, key_hint_y, key_hint_size, key_hint_size, rl.DARKGRAY)
+	rl.DrawRectangleLines(right_key_x, key_hint_y, key_hint_size, key_hint_size, rl.BLACK)
+	rl.DrawText("E", right_key_x+8, key_hint_y+4, 20, rl.WHITE)
+
 	for i in 0..<3 {
 		tab := tab_order[i]
 		tab_x := tree_x + i32(i)*tab_width
