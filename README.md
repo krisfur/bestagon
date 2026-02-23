@@ -10,6 +10,8 @@ Bestagon the hexagon fights evil squares with three magic stars. He can only fig
 
 ![upgrades](./upgrades.png)
 
+![gameover](./gameover.png)
+
 ## Run
 
 Make sure Odin is installed, then run:
