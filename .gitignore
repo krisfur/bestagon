@@ -7,10 +7,5 @@ bestagon
 .DS_Store
 Thumbs.db
 
-# Steamworks Binaries (Don't commit these!)
-*.so
-*.dll
-*.dylib
-
-# Steam Dev Config
-steam_appid.txt
+# Odin build artifacts
+*.odin-build

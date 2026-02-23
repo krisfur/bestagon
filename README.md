@@ -1,56 +1,17 @@
 # Bestagon
 
-Go game to be in raylib.
+Bestagon is now written in Odin using the built-in Raylib vendor package.
 
 ## Core mechanics
 
-Bestagon the hexagon is fighting evil squares with the help oh his magic stars. He can only fight while his star power lasts. Squares of a certain colour can only be damaged by a star of the same colour. Enemies get tougher over time, but the money gained from defeating them can let you buy upgrades to get stronger!
+Bestagon the hexagon fights evil squares with three magic stars. He can only fight while star power lasts. Squares of a given color can only be damaged by a matching star color. Enemies get tougher over time, and defeating them earns currency for upgrades.
 
 ![screenshot](./screenshot.png)
 
-## How to add the steam SDK later
+## Run
 
-1. in imports add:
-
-```go
-import (
-	//[...]
-	steamworks "github.com/hajimehoshi/go-steamworks"
-)
-```
-
-2. at the start of main add:
-
-```go
-	// ---------------------------------------------------------
-	// 1. Initialize Steamworks
-	// ---------------------------------------------------------
-	runtime.LockOSThread()
-
-	if err := steamworks.Init(); err != nil {
-		panic(fmt.Sprintf("Steamworks failed to initialize: %v\nMake sure Steam is running and steam_appid.txt is present.", err))
-	}
-
-	fmt.Println("Steamworks initialized successfully!")
-```
-
-3. inside the game loop add:
-
-```go
-	// ---------------------------------------------------------
-	// 4. Game Loop
-	// ---------------------------------------------------------
-	for !rl.WindowShouldClose() {
-		steamworks.RunCallbacks()
-```
-
-4. uncomment go-steamworks from `go.mod`
-5. Download the steam SDK [here](https://partner.steamgames.com/doc/sdk)
-6. Copy libsteam_api.so (Linux) or steam_api64.dll (Windows) to the root folder.
-7. Create a steam_appid.txt file containing 480.
-
-Then with steam running in the background simply run:
+Make sure Odin is installed, then run:
 
 ```bash
-go run .
+odin run .
 ```
