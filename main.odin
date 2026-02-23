@@ -87,6 +87,8 @@ Game_State :: struct {
 	menu_selection: int,
 	pause_selection: int,
 	skill_tree_tab: Upgrade_Tab,
+	reset_confirm_open: bool,
+	reset_confirm_yes_selected: bool,
 	selected_upgrade_node: [UPGRADE_TAB_COUNT]int,
 	upgrade_scroll_y: f32,
 
@@ -159,6 +161,18 @@ apply_save_data :: proc(gs: ^Game_State, save: Save_Data) {
 			gs.upgrade_nodes[tab_idx][node_idx].purchased = save.purchased_upgrades[tab_idx][node_idx]
 		}
 	}
+}
+
+reset_all_progress :: proc(gs: ^Game_State) {
+	gs.total_currency = 0
+	gs.session_currency = 0
+	for tab_idx in 0..<UPGRADE_TAB_COUNT {
+		count := gs.upgrade_node_counts[tab_idx]
+		for node_idx in 0..<count {
+			gs.upgrade_nodes[tab_idx][node_idx].purchased = node_idx == 0
+		}
+	}
+	save_progress(gs)
 }
 
 save_progress :: proc(gs: ^Game_State) {
@@ -646,6 +660,7 @@ update_menu_input :: proc(gs: ^Game_State) -> bool {
 			reset_run_state(gs)
 		case 1:
 			gs.current_screen = .Upgrades
+			gs.reset_confirm_open = false
 			ensure_selected_upgrade_visible(gs)
 		case 2:
 			return true
@@ -656,6 +671,27 @@ update_menu_input :: proc(gs: ^Game_State) -> bool {
 }
 
 update_upgrades_input :: proc(gs: ^Game_State) {
+	if gs.reset_confirm_open {
+		if rl.IsKeyPressed(.A) || rl.IsKeyPressed(.LEFT) || rl.IsKeyPressed(.D) || rl.IsKeyPressed(.RIGHT) {
+			gs.reset_confirm_yes_selected = !gs.reset_confirm_yes_selected
+		}
+
+		if rl.IsKeyPressed(.ENTER) || rl.IsKeyPressed(.SPACE) {
+			if gs.reset_confirm_yes_selected {
+				reset_all_progress(gs)
+			}
+			gs.reset_confirm_open = false
+			return
+		}
+
+		if rl.IsKeyPressed(.ESCAPE) || rl.IsKeyPressed(.BACKSPACE) || rl.IsKeyPressed(.R) {
+			gs.reset_confirm_open = false
+			return
+		}
+
+		return
+	}
+
 	if rl.IsKeyPressed(.Q) {
 		if gs.skill_tree_tab == .Red {
 			gs.skill_tree_tab = .Blue
@@ -688,6 +724,12 @@ update_upgrades_input :: proc(gs: ^Game_State) {
 
 	if rl.IsKeyPressed(.SPACE) || rl.IsKeyPressed(.ENTER) {
 		try_purchase_selected_upgrade(gs)
+	}
+
+	if rl.IsKeyPressed(.R) {
+		gs.reset_confirm_open = true
+		gs.reset_confirm_yes_selected = false
+		return
 	}
 
 	if rl.IsKeyPressed(.ESCAPE) || rl.IsKeyPressed(.BACKSPACE) {
@@ -951,6 +993,49 @@ draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
 	upgrade_hint: cstring = "Q/E tab  WASD/Arrows move  Space/Enter buy  Esc back"
 	hint_w := rl.MeasureText(upgrade_hint, 16)
 	rl.DrawText(upgrade_hint, center_x-hint_w/2, rl.GetScreenHeight()-50, 16, rl.WHITE)
+
+	reset_hint: cstring = "R TO RESET"
+	reset_x: i32 = 20
+	reset_y := rl.GetScreenHeight() - 50
+	rl.DrawText(reset_hint, reset_x-1, reset_y, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x+1, reset_y, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x, reset_y-1, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x, reset_y+1, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x, reset_y, 20, rl.RED)
+
+	if gs.reset_confirm_open {
+		rl.DrawRectangle(0, 0, rl.GetScreenWidth(), rl.GetScreenHeight(), rl.Fade(rl.BLACK, 0.65))
+
+		popup_w: i32 = 560
+		popup_h: i32 = 220
+		popup_x := center_x - popup_w/2
+		popup_y := rl.GetScreenHeight()/2 - popup_h/2
+
+		rl.DrawRectangle(popup_x, popup_y, popup_w, popup_h, rl.Color([4]u8{20, 20, 30, 250}))
+		rl.DrawRectangleLines(popup_x, popup_y, popup_w, popup_h, rl.RED)
+
+		title: cstring = "Reset all upgrades and money?"
+		title_w := rl.MeasureText(title, 30)
+		rl.DrawText(title, center_x-title_w/2, popup_y+30, 30, rl.WHITE)
+
+		rl.DrawText("This action cannot be undone.", center_x-145, popup_y+78, 20, rl.LIGHTGRAY)
+
+		yes_color := rl.GRAY
+		no_color := rl.GRAY
+		if gs.reset_confirm_yes_selected {
+			yes_color = rl.GREEN
+		} else {
+			no_color = rl.GREEN
+		}
+
+		rl.DrawRectangleLines(center_x-150, popup_y+130, 120, 46, yes_color)
+		rl.DrawText("YES", center_x-111, popup_y+143, 24, yes_color)
+
+		rl.DrawRectangleLines(center_x+30, popup_y+130, 120, 46, no_color)
+		rl.DrawText("NO", center_x+74, popup_y+143, 24, no_color)
+
+		rl.DrawText("A/D or Left/Right to choose, Space/Enter to confirm", center_x-220, popup_y+188, 16, rl.WHITE)
+	}
 }
 
 draw_playing :: proc(gs: ^Game_State) {
@@ -1066,6 +1151,8 @@ create_game_state :: proc() -> Game_State {
 		menu_selection = 0,
 		pause_selection = 0,
 		skill_tree_tab = .Red,
+		reset_confirm_open = false,
+		reset_confirm_yes_selected = false,
 		selected_upgrade_node = [UPGRADE_TAB_COUNT]int{0, 0, 0},
 		upgrade_scroll_y = 0,
 
