@@ -498,9 +498,16 @@ draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
 		run_complete_w := rl.MeasureText(run_complete_text, 40)
 		rl.DrawText(run_complete_text, center_x-run_complete_w/2, center_y-150, 40, rl.RED)
 
+		survived_total_seconds := i32(gs.elapsed_time)
+		survived_minutes := survived_total_seconds / 60
+		survived_seconds := survived_total_seconds % 60
+		survived_text := rl.TextFormat("Survived: %02d:%02d", survived_minutes, survived_seconds)
+		survived_w := rl.MeasureText(survived_text, 25)
+		rl.DrawText(survived_text, center_x-survived_w/2, center_y-60, 25, rl.WHITE)
+
 		earned_text := rl.TextFormat("Earned: £%d", gs.session_currency)
 		earned_w := rl.MeasureText(earned_text, 25)
-		rl.DrawText(earned_text, center_x-earned_w/2, center_y-90, 25, rl.GOLD)
+		rl.DrawText(earned_text, center_x-earned_w/2, center_y-95, 25, rl.GOLD)
 	}
 
 	total_text := rl.TextFormat("£%d", gs.total_currency)
@@ -615,6 +622,11 @@ draw_playing :: proc(gs: ^Game_State) {
 
 	rl.DrawText("BESTAGON", 10, 10, 30, rl.GREEN)
 	rl.DrawText("WASD or Arrows to move", 10, 90, 20, rl.WHITE)
+
+	elapsed_total_seconds := i32(gs.elapsed_time)
+	elapsed_minutes := elapsed_total_seconds / 60
+	elapsed_seconds := elapsed_total_seconds % 60
+	rl.DrawText(rl.TextFormat("Time: %02d:%02d", elapsed_minutes, elapsed_seconds), 10, rl.GetScreenHeight()-30, 20, rl.WHITE)
 
 	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), rl.GetScreenWidth()-180, 10, 20, rl.GOLD)
 	rl.DrawText(rl.TextFormat("Session: £%d", gs.session_currency), rl.GetScreenWidth()-180, 40, 16, rl.RED)
