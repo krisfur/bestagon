@@ -15,3 +15,7 @@ Make sure Odin is installed, then run:
 ```bash
 odin run .
 ```
+
+## Controls
+
+Bestagon is keyboard-only by design (no mouse required).
