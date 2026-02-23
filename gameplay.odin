@@ -6,7 +6,7 @@ import rl "vendor:raylib"
 distance :: proc(a, b: Vector2) -> f32 {
 	dx := a.x - b.x
 	dy := a.y - b.y
-	return math.sqrt(dx*dx + dy*dy)
+	return math.sqrt(dx * dx + dy * dy)
 }
 
 update_player :: proc(player: ^Player) {
@@ -31,16 +31,16 @@ update_player :: proc(player: ^Player) {
 	sw := f32(rl.GetScreenWidth())
 	sh := f32(rl.GetScreenHeight())
 
-	if player.position.x-player.radius < 0 {
+	if player.position.x - player.radius < 0 {
 		player.position.x = player.radius
 	}
-	if player.position.x+player.radius > sw {
+	if player.position.x + player.radius > sw {
 		player.position.x = sw - player.radius
 	}
-	if player.position.y-player.radius < 0 {
+	if player.position.y - player.radius < 0 {
 		player.position.y = player.radius
 	}
-	if player.position.y+player.radius > sh {
+	if player.position.y + player.radius > sh {
 		player.position.y = sh - player.radius
 	}
 }
@@ -112,7 +112,10 @@ update_enemies :: proc(gs: ^Game_State) {
 
 		sw := f32(rl.GetScreenWidth())
 		sh := f32(rl.GetScreenHeight())
-		if enemy.position.x < -50 || enemy.position.x > sw+50 || enemy.position.y < -50 || enemy.position.y > sh+50 {
+		if enemy.position.x < -50 ||
+		   enemy.position.x > sw + 50 ||
+		   enemy.position.y < -50 ||
+		   enemy.position.y > sh + 50 {
 			remove_enemy(gs, i)
 			continue
 		}
@@ -122,14 +125,14 @@ update_enemies :: proc(gs: ^Game_State) {
 }
 
 check_collisions :: proc(gs: ^Game_State) {
-	for i in 0..<gs.enemy_count {
+	for i in 0 ..< gs.enemy_count {
 		enemy := &gs.enemies[i]
 		dist := distance(gs.player.position, enemy.position)
-		if dist < gs.player.radius+enemy.size*0.5 {
+		if dist < gs.player.radius + enemy.size * 0.5 {
 			dx := gs.player.position.x - enemy.position.x
 			dy := gs.player.position.y - enemy.position.y
 			bounce_dist: f32 = 50
-			bounce_len := math.sqrt(dx*dx + dy*dy)
+			bounce_len := math.sqrt(dx * dx + dy * dy)
 			if bounce_len > 0 {
 				gs.player.position.x += (dx / bounce_len) * bounce_dist
 				gs.player.position.y += (dy / bounce_len) * bounce_dist
@@ -142,11 +145,15 @@ check_collisions :: proc(gs: ^Game_State) {
 		}
 	}
 
-	star_positions := [3]Vector2{gs.star_red.position, gs.star_blue.position, gs.star_green.position}
+	star_positions := [3]Vector2 {
+		gs.star_red.position,
+		gs.star_blue.position,
+		gs.star_green.position,
+	}
 	star_colors := [3]Enemy_Color{.Red, .Blue, .Green}
 	star_radius: f32 = 8
 
-	for star_idx in 0..<3 {
+	for star_idx in 0 ..< 3 {
 		star_pos := star_positions[star_idx]
 		star_color := star_colors[star_idx]
 
@@ -159,7 +166,7 @@ check_collisions :: proc(gs: ^Game_State) {
 			}
 
 			dist := distance(star_pos, enemy.position)
-			if dist < star_radius+enemy.size*0.5 {
+			if dist < star_radius + enemy.size * 0.5 {
 				enemy.health -= 25
 				if enemy.health <= 0 {
 					gs.session_currency += ENEMY_KILL_REWARD
@@ -183,15 +190,27 @@ check_collisions :: proc(gs: ^Game_State) {
 }
 
 reset_run_state :: proc(gs: ^Game_State) {
-	gs.player = Player{
+	gs.player = Player {
 		position = Vector2{640, 360},
 		velocity = Vector2{0, 0},
-		speed = 5.0,
-		radius = 20,
+		speed    = 5.0,
+		radius   = 20,
 	}
-	gs.star_red = Star{position = Vector2{680, 340}, radius = 8, speed = 0.2}
-	gs.star_blue = Star{position = Vector2{600, 340}, radius = 8, speed = 0.2}
-	gs.star_green = Star{position = Vector2{640, 400}, radius = 8, speed = 0.2}
+	gs.star_red = Star {
+		position = Vector2{680, 340},
+		radius   = 8,
+		speed    = 0.2,
+	}
+	gs.star_blue = Star {
+		position = Vector2{600, 340},
+		radius   = 8,
+		speed    = 0.2,
+	}
+	gs.star_green = Star {
+		position = Vector2{640, 400},
+		radius   = 8,
+		speed    = 0.2,
+	}
 
 	gs.enemy_count = 0
 	gs.star_power = 1800
@@ -300,9 +319,9 @@ update_game :: proc(gs: ^Game_State) -> bool {
 	}
 
 	gs.elapsed_time += 1.0 / 60.0
-	gs.base_enemy_health = 20.0 + gs.elapsed_time*5.5
+	gs.base_enemy_health = 20.0 + gs.elapsed_time * 10
 
-	gs.enemy_spawn_rate = 2.0 - f32(gs.score)/5000.0
+	gs.enemy_spawn_rate = 2.0 - f32(gs.score) / 5000.0
 	if gs.enemy_spawn_rate < 0.5 {
 		gs.enemy_spawn_rate = 0.5
 	}
