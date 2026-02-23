@@ -5,6 +5,7 @@ import rl "vendor:raylib"
 main :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Bestagon")
 	defer rl.CloseWindow()
+	rl.HideCursor()
 
 	rl.SetTargetFPS(60)
 	rl.SetExitKey(.KEY_NULL)
