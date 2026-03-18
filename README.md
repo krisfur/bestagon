@@ -17,5 +17,5 @@ Bestagon the hexagon fights evil squares with three magic stars. He can only fig
 Make sure Odin is installed, then run:
 
 ```bash
-odin run .
+odin run src
 ```
