@@ -1,7 +1,7 @@
 package main
 
 import "core:encoding/json"
-import os "core:os/os2"
+import os "core:os"
 
 Save_Data :: struct {
 	total_currency: i32,
