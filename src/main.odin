@@ -13,7 +13,7 @@ unload_game_canvas :: proc() {
 }
 
 main :: proc() {
-	rl.SetConfigFlags({.WINDOW_RESIZABLE})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .MSAA_4X_HINT})
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Bestagon")
 	defer rl.CloseWindow()
 	init_game_canvas()
