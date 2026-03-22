@@ -1,12 +1,52 @@
 package main
 
+import "core:math"
+
 WINDOW_WIDTH :: 1280
 WINDOW_HEIGHT :: 720
+LOGICAL_WIDTH :: 1280
+LOGICAL_HEIGHT :: 720
 MAX_ENEMIES :: 1024
 UPGRADE_TAB_COUNT :: 3
 MAX_UPGRADE_NODES :: 16
 ENEMY_KILL_REWARD :: i32(20)
 SAVE_FILE_NAME :: ".bestagon_save.json"
+
+Viewport :: struct {
+	offset_x: i32,
+	offset_y: i32,
+	width: i32,
+	height: i32,
+	scale: f32,
+}
+
+logical_width :: proc() -> i32 {
+	return LOGICAL_WIDTH
+}
+
+logical_height :: proc() -> i32 {
+	return LOGICAL_HEIGHT
+}
+
+calculate_viewport :: proc(window_width, window_height: i32) -> Viewport {
+	if window_width <= 0 || window_height <= 0 {
+		return Viewport{}
+	}
+
+	scale_x := f32(window_width) / f32(LOGICAL_WIDTH)
+	scale_y := f32(window_height) / f32(LOGICAL_HEIGHT)
+	scale := math.min(scale_x, scale_y)
+	viewport_width := i32(f32(LOGICAL_WIDTH) * scale)
+	viewport_height := i32(f32(LOGICAL_HEIGHT) * scale)
+
+	return Viewport{
+		offset_x = (window_width - viewport_width) / 2,
+		offset_y = (window_height - viewport_height) / 2,
+		width = viewport_width,
+		height = viewport_height,
+		scale = scale,
+	}
+}
 
 Enemy_Color :: enum i32 {
 	Red,

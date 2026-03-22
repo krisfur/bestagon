@@ -272,8 +272,8 @@ update_upgrades_input :: proc(gs: ^Game_State) {
 }
 
 draw_upgrades :: proc(gs: ^Game_State) {
-	center_x := rl.GetScreenWidth() / 2
-	screen_width := rl.GetScreenWidth()
+	center_x := logical_width() / 2
+	screen_width := logical_width()
 
 	rl.DrawText("UPGRADES", center_x-100, 30, 40, rl.GOLD)
 	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), screen_width-180, 30, 30, rl.GOLD)
@@ -417,11 +417,11 @@ draw_upgrades :: proc(gs: ^Game_State) {
 
 	upgrade_hint: cstring = "Q/E tab  WASD/Arrows move  Space/Enter buy  Esc back"
 	hint_w := rl.MeasureText(upgrade_hint, 16)
-	rl.DrawText(upgrade_hint, center_x-hint_w/2, rl.GetScreenHeight()-50, 16, rl.WHITE)
+	rl.DrawText(upgrade_hint, center_x-hint_w/2, logical_height()-50, 16, rl.WHITE)
 
 	reset_hint: cstring = "R TO RESET"
 	reset_x: i32 = 20
-	reset_y := rl.GetScreenHeight() - 50
+	reset_y := logical_height() - 50
 	rl.DrawText(reset_hint, reset_x-1, reset_y, 20, rl.BLACK)
 	rl.DrawText(reset_hint, reset_x+1, reset_y, 20, rl.BLACK)
 	rl.DrawText(reset_hint, reset_x, reset_y-1, 20, rl.BLACK)
@@ -429,12 +429,12 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	rl.DrawText(reset_hint, reset_x, reset_y, 20, rl.RED)
 
 	if gs.reset_confirm_open {
-		rl.DrawRectangle(0, 0, rl.GetScreenWidth(), rl.GetScreenHeight(), rl.Fade(rl.BLACK, 0.65))
+		rl.DrawRectangle(0, 0, logical_width(), logical_height(), rl.Fade(rl.BLACK, 0.65))
 
 		popup_w: i32 = 560
 		popup_h: i32 = 220
 		popup_x := center_x - popup_w/2
-		popup_y := rl.GetScreenHeight()/2 - popup_h/2
+		popup_y := logical_height()/2 - popup_h/2
 
 		rl.DrawRectangle(popup_x, popup_y, popup_w, popup_h, rl.Color([4]u8{20, 20, 30, 250}))
 		rl.DrawRectangleLines(popup_x, popup_y, popup_w, popup_h, rl.RED)

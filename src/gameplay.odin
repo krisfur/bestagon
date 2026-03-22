@@ -28,8 +28,8 @@ update_player :: proc(player: ^Player) {
 	player.position.x += player.velocity.x
 	player.position.y += player.velocity.y
 
-	sw := f32(rl.GetScreenWidth())
-	sh := f32(rl.GetScreenHeight())
+	sw := f32(logical_width())
+	sh := f32(logical_height())
 
 	if player.position.x - player.radius < 0 {
 		player.position.x = player.radius
@@ -67,8 +67,8 @@ spawn_enemy :: proc(gs: ^Game_State) {
 		return
 	}
 
-	sw := f32(rl.GetScreenWidth())
-	sh := f32(rl.GetScreenHeight())
+	sw := f32(logical_width())
+	sh := f32(logical_height())
 
 	new_enemy := Enemy{}
 	new_enemy.size = 30
@@ -110,8 +110,8 @@ update_enemies :: proc(gs: ^Game_State) {
 			enemy.position.y += (dy / dist) * speed
 		}
 
-		sw := f32(rl.GetScreenWidth())
-		sh := f32(rl.GetScreenHeight())
+		sw := f32(logical_width())
+		sh := f32(logical_height())
 		if enemy.position.x < -50 ||
 		   enemy.position.x > sw + 50 ||
 		   enemy.position.y < -50 ||

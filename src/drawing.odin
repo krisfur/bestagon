@@ -66,8 +66,8 @@ enemy_color_to_raylib :: proc(color: Enemy_Color) -> rl.Color {
 }
 
 draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
-	center_x := rl.GetScreenWidth() / 2
-	center_y := rl.GetScreenHeight() / 2
+	center_x := logical_width() / 2
+	center_y := logical_height() / 2
 
 	rl.DrawText("BESTAGON", center_x-120, 80, 50, rl.MAGENTA)
 
@@ -109,7 +109,7 @@ draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
 
 	menu_hint: cstring = "W/S or Up/Down to select, Space or Enter to confirm"
 	menu_hint_w := rl.MeasureText(menu_hint, 16)
-	rl.DrawText(menu_hint, center_x-menu_hint_w/2, rl.GetScreenHeight()-50, 16, rl.WHITE)
+	rl.DrawText(menu_hint, center_x-menu_hint_w/2, logical_height()-50, 16, rl.WHITE)
 }
 
 draw_playing :: proc(gs: ^Game_State) {
@@ -130,7 +130,7 @@ draw_playing :: proc(gs: ^Game_State) {
 
 	bar_w: f32 = 400
 	bar_h: f32 = 30
-	bar_x := f32(rl.GetScreenWidth())*0.5 - bar_w*0.5
+	bar_x := f32(logical_width())*0.5 - bar_w*0.5
 	bar_y: f32 = 50
 
 	draw_health_bar(bar_x, bar_y, bar_w, bar_h, gs.star_power, gs.max_star_power, rl.GOLD)
@@ -148,18 +148,18 @@ draw_playing :: proc(gs: ^Game_State) {
 	elapsed_total_seconds := i32(gs.elapsed_time)
 	elapsed_minutes := elapsed_total_seconds / 60
 	elapsed_seconds := elapsed_total_seconds % 60
-	rl.DrawText(rl.TextFormat("Time: %02d:%02d", elapsed_minutes, elapsed_seconds), 10, rl.GetScreenHeight()-30, 20, rl.WHITE)
+	rl.DrawText(rl.TextFormat("Time: %02d:%02d", elapsed_minutes, elapsed_seconds), 10, logical_height()-30, 20, rl.WHITE)
 
-	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), rl.GetScreenWidth()-180, 10, 20, rl.GOLD)
-	rl.DrawText(rl.TextFormat("Session: £%d", gs.session_currency), rl.GetScreenWidth()-180, 40, 16, rl.RED)
+	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), logical_width()-180, 10, 20, rl.GOLD)
+	rl.DrawText(rl.TextFormat("Session: £%d", gs.session_currency), logical_width()-180, 40, 16, rl.RED)
 }
 
 draw_paused :: proc(gs: ^Game_State) {
 	draw_playing(gs)
-	rl.DrawRectangle(0, 0, rl.GetScreenWidth(), rl.GetScreenHeight(), rl.Fade(rl.BLACK, 0.7))
+	rl.DrawRectangle(0, 0, logical_width(), logical_height(), rl.Fade(rl.BLACK, 0.7))
 
-	center_x := rl.GetScreenWidth() / 2
-	center_y := rl.GetScreenHeight() / 2
+	center_x := logical_width() / 2
+	center_y := logical_height() / 2
 
 	paused_text: cstring = "PAUSED"
 	paused_w := rl.MeasureText(paused_text, 50)
@@ -182,7 +182,12 @@ draw_paused :: proc(gs: ^Game_State) {
 }
 
 draw_game :: proc(gs: ^Game_State) {
+	viewport := calculate_viewport(rl.GetScreenWidth(), rl.GetScreenHeight())
+
 	rl.BeginDrawing()
+	rl.ClearBackground(rl.BLACK)
+
+	rl.BeginTextureMode(game_canvas)
 	rl.ClearBackground(rl.Color([4]u8{20, 20, 30, 255}))
 
 	switch gs.current_screen {
@@ -197,6 +202,23 @@ draw_game :: proc(gs: ^Game_State) {
 	case .Paused:
 		draw_paused(gs)
 	}
+
+	rl.EndTextureMode()
+
+	source := rl.Rectangle{
+		x = 0,
+		y = 0,
+		width = f32(game_canvas.texture.width),
+		height = -f32(game_canvas.texture.height),
+	}
+	destination := rl.Rectangle{
+		x = f32(viewport.offset_x),
+		y = f32(viewport.offset_y),
+		width = f32(viewport.width),
+		height = f32(viewport.height),
+	}
+	origin := rl.Vector2{0, 0}
+	rl.DrawTexturePro(game_canvas.texture, source, destination, origin, 0, rl.WHITE)
 
 	rl.EndDrawing()
 }
