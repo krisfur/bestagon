@@ -53,6 +53,22 @@ update_star :: proc(star: ^Star, player_pos, offset: Vector2) {
 	star.position.y += (target_y - star.position.y) * star.speed
 }
 
+enemy_reward :: proc(enemy: ^Enemy) -> i32 {
+	mult: f32 = 1.0
+	switch enemy.kind {
+	case .Square:
+		mult = 1.0
+	case .Circle:
+		mult = 1.5
+	case .Triangle:
+		mult = 2.0
+	}
+	if enemy.is_large {
+		mult *= 2.0
+	}
+	return i32(f32(ENEMY_KILL_REWARD) * mult)
+}
+
 remove_enemy :: proc(gs: ^Game_State, index: int) {
 	if gs.enemy_count <= 0 {
 		return
@@ -71,10 +87,18 @@ spawn_enemy :: proc(gs: ^Game_State) {
 	sh := f32(logical_height())
 
 	new_enemy := Enemy{}
-	new_enemy.size = 30
-	new_enemy.max_health = gs.base_enemy_health
-	new_enemy.health = new_enemy.max_health
 	new_enemy.color = Enemy_Color(rl.GetRandomValue(0, 2))
+	new_enemy.kind = Enemy_Kind(rl.GetRandomValue(0, 2))
+	new_enemy.is_large = rl.GetRandomValue(0, LARGE_SPAWN_CHANCE - 1) == 0
+
+	base_size: f32 = 30
+	new_enemy.size = new_enemy.is_large ? base_size * LARGE_SIZE_MULT : base_size
+	new_enemy.max_health = new_enemy.is_large ? gs.base_enemy_health * LARGE_HEALTH_MULT : gs.base_enemy_health
+	new_enemy.health = new_enemy.max_health
+
+	if new_enemy.kind == .Triangle {
+		new_enemy.timer = TRIANGLE_APPROACH_DUR
+	}
 
 	edge := rl.GetRandomValue(0, 3)
 	switch edge {
@@ -96,18 +120,76 @@ spawn_enemy :: proc(gs: ^Game_State) {
 	gs.enemy_count += 1
 }
 
+move_toward_player :: proc(enemy: ^Enemy, player_pos: Vector2, speed: f32) {
+	dx := player_pos.x - enemy.position.x
+	dy := player_pos.y - enemy.position.y
+	dist := distance(enemy.position, player_pos)
+	if dist > 0 {
+		enemy.position.x += (dx / dist) * speed
+		enemy.position.y += (dy / dist) * speed
+	}
+}
+
+// Triangles approach slowly, pause to charge, then dash toward the player.
+update_triangle_enemy :: proc(enemy: ^Enemy, player_pos: Vector2, dt, speed_mult: f32) {
+	enemy.timer -= dt
+	switch enemy.phase {
+	case 0: // approach
+		move_toward_player(enemy, player_pos, TRIANGLE_APPROACH_SPEED * speed_mult)
+		if enemy.timer <= 0 {
+			enemy.phase = 1
+			enemy.timer = TRIANGLE_CHARGE_DUR
+		}
+	case 1: // charge in place, lock dash direction when it ends
+		if enemy.timer <= 0 {
+			dx := player_pos.x - enemy.position.x
+			dy := player_pos.y - enemy.position.y
+			dist := distance(enemy.position, player_pos)
+			enemy.velocity = dist > 0 ? Vector2{dx / dist, dy / dist} : Vector2{0, 0}
+			enemy.phase = 2
+			enemy.timer = TRIANGLE_DASH_DUR
+		}
+	case 2: // dash along the locked direction (full speed even for large, so the lunge still connects)
+		enemy.position.x += enemy.velocity.x * TRIANGLE_DASH_SPEED
+		enemy.position.y += enemy.velocity.y * TRIANGLE_DASH_SPEED
+		if enemy.timer <= 0 {
+			enemy.phase = 0
+			enemy.timer = TRIANGLE_APPROACH_DUR
+		}
+	}
+}
+
+// Circles weave toward the player tracing a figure-8.
+update_circle_enemy :: proc(enemy: ^Enemy, player_pos: Vector2, dt, speed_mult: f32) {
+	enemy.weave += CIRCLE_WEAVE_FREQ * dt
+	dx := player_pos.x - enemy.position.x
+	dy := player_pos.y - enemy.position.y
+	dist := distance(enemy.position, player_pos)
+	if dist <= 0 {
+		return
+	}
+	fwd := Vector2{dx / dist, dy / dist}
+	perp := Vector2{-fwd.y, fwd.x}
+	forward := (CIRCLE_FORWARD_SPEED + math.sin(enemy.weave * 2) * CIRCLE_FORWARD_AMP) * speed_mult
+	lateral := math.sin(enemy.weave) * CIRCLE_LATERAL_AMP * speed_mult
+	enemy.position.x += fwd.x * forward + perp.x * lateral
+	enemy.position.y += fwd.y * forward + perp.y * lateral
+}
+
 update_enemies :: proc(gs: ^Game_State) {
+	dt: f32 = 1.0 / 60.0
 	i := 0
 	for i < gs.enemy_count {
 		enemy := &gs.enemies[i]
-		dx := gs.player.position.x - enemy.position.x
-		dy := gs.player.position.y - enemy.position.y
-		dist := distance(enemy.position, gs.player.position)
+		speed_mult: f32 = enemy.is_large ? LARGE_SPEED_MULT : 1.0
 
-		if dist > 0 {
-			speed: f32 = 2.0
-			enemy.position.x += (dx / dist) * speed
-			enemy.position.y += (dy / dist) * speed
+		switch enemy.kind {
+		case .Square:
+			move_toward_player(enemy, gs.player.position, ENEMY_BASE_SPEED * speed_mult)
+		case .Triangle:
+			update_triangle_enemy(enemy, gs.player.position, dt, speed_mult)
+		case .Circle:
+			update_circle_enemy(enemy, gs.player.position, dt, speed_mult)
 		}
 
 		sw := f32(logical_width())
@@ -169,8 +251,9 @@ check_collisions :: proc(gs: ^Game_State) {
 			if dist < star_radius + enemy.size * 0.5 {
 				enemy.health -= 25
 				if enemy.health <= 0 {
-					gs.session_currency += ENEMY_KILL_REWARD
-					gs.total_currency += ENEMY_KILL_REWARD
+					reward := enemy_reward(enemy)
+					gs.session_currency += reward
+					gs.total_currency += reward
 
 					remove_enemy(gs, enemy_idx)
 

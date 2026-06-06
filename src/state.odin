@@ -12,6 +12,24 @@ MAX_UPGRADE_NODES :: 16
 ENEMY_KILL_REWARD :: i32(20)
 SAVE_FILE_NAME :: ".bestagon_save.json"
 
+ENEMY_BASE_SPEED :: f32(2.0)
+
+TRIANGLE_APPROACH_SPEED :: f32(1.5)
+TRIANGLE_DASH_SPEED :: f32(8.0)
+TRIANGLE_APPROACH_DUR :: f32(1.2)
+TRIANGLE_CHARGE_DUR :: f32(0.45)
+TRIANGLE_DASH_DUR :: f32(0.35)
+
+CIRCLE_FORWARD_SPEED :: f32(1.6)
+CIRCLE_FORWARD_AMP :: f32(1.0)
+CIRCLE_LATERAL_AMP :: f32(2.2)
+CIRCLE_WEAVE_FREQ :: f32(4.0)
+
+LARGE_SPAWN_CHANCE :: i32(5)
+LARGE_SIZE_MULT :: f32(2.0)
+LARGE_HEALTH_MULT :: f32(3.0)
+LARGE_SPEED_MULT :: f32(0.5)
+
 Viewport :: struct {
 	offset_x: i32,
 	offset_y: i32,
@@ -54,6 +72,12 @@ Enemy_Color :: enum i32 {
 	Green,
 }
 
+Enemy_Kind :: enum i32 {
+	Square,
+	Triangle,
+	Circle,
+}
+
 Upgrade_Tab :: enum i32 {
 	Red,
 	Green,
@@ -88,10 +112,16 @@ Star :: struct {
 
 Enemy :: struct {
 	position: Vector2,
+	velocity: Vector2,
 	size: f32,
 	health: f32,
 	max_health: f32,
 	color: Enemy_Color,
+	kind: Enemy_Kind,
+	is_large: bool,
+	phase: i32,
+	timer: f32,
+	weave: f32,
 }
 
 Upgrade_Node :: struct {
