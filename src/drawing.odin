@@ -43,6 +43,14 @@ draw_square :: proc(center_x, center_y, size: f32, color: rl.Color) {
 	rl.DrawRectangle(i32(center_x-half), i32(center_y-half), i32(size), i32(size), color)
 }
 
+draw_triangle :: proc(center_x, center_y, size: f32, color: rl.Color) {
+	rl.DrawPoly(rl.Vector2{center_x, center_y}, 3, size*0.6, -90, color)
+}
+
+draw_circle :: proc(center_x, center_y, size: f32, color: rl.Color) {
+	rl.DrawCircleV(rl.Vector2{center_x, center_y}, size*0.5, color)
+}
+
 draw_health_bar :: proc(x, y, width, height, current, max_value: f32, bar_color: rl.Color) {
 	rl.DrawRectangleLines(i32(x), i32(y), i32(width), i32(height), rl.BLACK)
 
@@ -122,7 +130,14 @@ draw_playing :: proc(gs: ^Game_State) {
 	for i in 0..<gs.enemy_count {
 		enemy := gs.enemies[i]
 		color := enemy_color_to_raylib(enemy.color)
-		draw_square(enemy.position.x, enemy.position.y, enemy.size, color)
+		switch enemy.kind {
+		case .Square:
+			draw_square(enemy.position.x, enemy.position.y, enemy.size, color)
+		case .Triangle:
+			draw_triangle(enemy.position.x, enemy.position.y, enemy.size, color)
+		case .Circle:
+			draw_circle(enemy.position.x, enemy.position.y, enemy.size, color)
+		}
 
 		bar_w := enemy.size
 		draw_health_bar(enemy.position.x-bar_w*0.5, enemy.position.y-enemy.size*0.5-15, bar_w, 5, enemy.health, enemy.max_health, rl.LIME)
