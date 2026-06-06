@@ -261,7 +261,6 @@ check_collisions :: proc(gs: ^Game_State) {
 					if gs.star_power > gs.max_star_power {
 						gs.star_power = gs.max_star_power
 					}
-					gs.score += 100
 					break
 				}
 				break
@@ -304,7 +303,6 @@ reset_run_state :: proc(gs: ^Game_State) {
 
 	gs.current_screen = .Playing
 	gs.pause_selection = 0
-	gs.score = 0
 	gs.session_currency = 0
 	gs.elapsed_time = 0
 }
@@ -404,7 +402,7 @@ update_game :: proc(gs: ^Game_State) -> bool {
 	gs.elapsed_time += 1.0 / 60.0
 	gs.base_enemy_health = 20.0 + gs.elapsed_time * 10
 
-	gs.enemy_spawn_rate = 2.0 - f32(gs.score) / 5000.0
+	gs.enemy_spawn_rate = 2.0 - gs.elapsed_time / 100.0
 	if gs.enemy_spawn_rate < 0.5 {
 		gs.enemy_spawn_rate = 0.5
 	}

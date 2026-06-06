@@ -160,7 +160,6 @@ Game_State :: struct {
 	upgrade_nodes: [UPGRADE_TAB_COUNT][MAX_UPGRADE_NODES]Upgrade_Node,
 	upgrade_node_counts: [UPGRADE_TAB_COUNT]int,
 
-	score: i32,
 	session_currency: i32,
 	total_currency: i32,
 	elapsed_time: f32,
@@ -195,7 +194,6 @@ create_game_state :: proc() -> Game_State {
 		selected_upgrade_node = [UPGRADE_TAB_COUNT]int{0, 0, 0},
 		upgrade_scroll_y = 0,
 
-		score = 0,
 		session_currency = 0,
 		total_currency = 0,
 		elapsed_time = 0,
