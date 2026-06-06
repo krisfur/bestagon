@@ -89,7 +89,7 @@ spawn_enemy :: proc(gs: ^Game_State) {
 	new_enemy := Enemy{}
 	new_enemy.color = Enemy_Color(rl.GetRandomValue(0, 2))
 	new_enemy.kind = Enemy_Kind(rl.GetRandomValue(0, 2))
-	new_enemy.is_large = rl.GetRandomValue(0, LARGE_SPAWN_CHANCE - 1) == 0
+	new_enemy.is_large = gs.elapsed_time >= LARGE_SPAWN_MIN_TIME && rl.GetRandomValue(0, LARGE_SPAWN_CHANCE - 1) == 0
 
 	base_size: f32 = 30
 	new_enemy.size = new_enemy.is_large ? base_size * LARGE_SIZE_MULT : base_size
