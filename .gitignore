@@ -9,3 +9,6 @@ Thumbs.db
 
 # Odin build artifacts
 *.odin-build
+
+# Web (wasm) build output
+build/
