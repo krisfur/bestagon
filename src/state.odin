@@ -12,6 +12,13 @@ MAX_UPGRADE_NODES :: 16
 ENEMY_KILL_REWARD :: i32(20)
 SAVE_FILE_NAME :: ".bestagon_save.json"
 
+// Highest main-menu selection index: the WASM build drops the EXIT option
+when ODIN_OS == .JS {
+	MENU_OPTION_MAX :: 1
+} else {
+	MENU_OPTION_MAX :: 2
+}
+
 ENEMY_BASE_SPEED :: f32(2.0)
 
 TRIANGLE_APPROACH_SPEED :: f32(1.5)

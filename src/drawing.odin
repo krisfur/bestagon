@@ -112,8 +112,11 @@ draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
 	upgrades_w := rl.MeasureText(upgrades_text, 25)
 	rl.DrawText(upgrades_text, center_x - upgrades_w / 2, button_y + 85, 25, colors[1])
 
-	rl.DrawRectangleLines(center_x - 100, button_y + 140, 200, 50, colors[2])
-	rl.DrawText("EXIT", center_x - 25, button_y + 155, 25, colors[2])
+	// Only have an EXIT option in the native build, no need on web
+	when ODIN_OS != .JS {
+		rl.DrawRectangleLines(center_x - 100, button_y + 140, 200, 50, colors[2])
+		rl.DrawText("EXIT", center_x - 25, button_y + 155, 25, colors[2])
+	}
 
 	menu_hint: cstring = "W/S or Up/Down to select, Space or Enter to confirm"
 	menu_hint_w := rl.MeasureText(menu_hint, 16)

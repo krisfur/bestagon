@@ -317,12 +317,12 @@ update_menu_input :: proc(gs: ^Game_State) -> bool {
 	if rl.IsKeyPressed(.UP) || rl.IsKeyPressed(.W) {
 		gs.menu_selection -= 1
 		if gs.menu_selection < 0 {
-			gs.menu_selection = 2
+			gs.menu_selection = MENU_OPTION_MAX
 		}
 	}
 	if rl.IsKeyPressed(.DOWN) || rl.IsKeyPressed(.S) {
 		gs.menu_selection += 1
-		if gs.menu_selection > 2 {
+		if gs.menu_selection > MENU_OPTION_MAX {
 			gs.menu_selection = 0
 		}
 	}
