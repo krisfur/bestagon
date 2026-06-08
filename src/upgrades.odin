@@ -19,18 +19,27 @@ upgrade_tab_color :: proc(tab: Upgrade_Tab) -> rl.Color {
 	return rl.GRAY
 }
 
-set_upgrade_node :: proc(gs: ^Game_State, tab: Upgrade_Tab, index: int, x, y: f32, parent_index: int, name, description: cstring, price: i32, purchased := false) {
+set_upgrade_node :: proc(
+	gs: ^Game_State,
+	tab: Upgrade_Tab,
+	index: int,
+	x, y: f32,
+	parent_index: int,
+	name, description: cstring,
+	price: i32,
+	purchased := false,
+) {
 	if index < 0 || index >= MAX_UPGRADE_NODES {
 		return
 	}
 	tab_idx := upgrade_tab_index(tab)
-	gs.upgrade_nodes[tab_idx][index] = Upgrade_Node{
-		position = Vector2{x, y},
+	gs.upgrade_nodes[tab_idx][index] = Upgrade_Node {
+		position     = Vector2{x, y},
 		parent_index = parent_index,
-		name = name,
-		description = description,
-		price = price,
-		purchased = purchased,
+		name         = name,
+		description  = description,
+		price        = price,
+		purchased    = purchased,
 	}
 }
 
@@ -65,10 +74,14 @@ upgrade_node_is_unlocked :: proc(gs: ^Game_State, tab: Upgrade_Tab, node_index: 
 	return gs.upgrade_nodes[tab_idx][node.parent_index].purchased
 }
 
-upgrade_content_max_scroll :: proc(gs: ^Game_State, tab: Upgrade_Tab, viewport_height: f32) -> f32 {
+upgrade_content_max_scroll :: proc(
+	gs: ^Game_State,
+	tab: Upgrade_Tab,
+	viewport_height: f32,
+) -> f32 {
 	tab_idx := upgrade_tab_index(tab)
 	max_y: f32 = 0
-	for i in 0..<gs.upgrade_node_counts[tab_idx] {
+	for i in 0 ..< gs.upgrade_node_counts[tab_idx] {
 		node_y := gs.upgrade_nodes[tab_idx][i].position.y
 		if node_y > max_y {
 			max_y = node_y
@@ -100,10 +113,10 @@ ensure_selected_upgrade_visible :: proc(gs: ^Game_State) {
 	node_y := gs.upgrade_nodes[tab_idx][selected].position.y
 	top_margin: f32 = 40
 	bottom_margin: f32 = 360
-	if node_y-gs.upgrade_scroll_y < top_margin {
+	if node_y - gs.upgrade_scroll_y < top_margin {
 		gs.upgrade_scroll_y = node_y - top_margin
 	}
-	if node_y-gs.upgrade_scroll_y > bottom_margin {
+	if node_y - gs.upgrade_scroll_y > bottom_margin {
 		gs.upgrade_scroll_y = node_y - bottom_margin
 	}
 	clamp_upgrade_scroll(gs)
@@ -126,7 +139,7 @@ select_neighbor_upgrade_node :: proc(gs: ^Game_State, horizontal, vertical: int)
 	best_index := current
 	best_score: f32 = 1e9
 
-	for i in 0..<count {
+	for i in 0 ..< count {
 		if i == current {
 			continue
 		}
@@ -155,7 +168,7 @@ select_neighbor_upgrade_node :: proc(gs: ^Game_State, horizontal, vertical: int)
 			secondary = math.abs(dx)
 		}
 
-		score := primary + secondary*1.7
+		score := primary + secondary * 1.7
 		if score < best_score {
 			best_score = score
 			best_index = i
@@ -195,9 +208,9 @@ try_purchase_selected_upgrade :: proc(gs: ^Game_State) {
 reset_all_progress :: proc(gs: ^Game_State) {
 	gs.total_currency = 0
 	gs.session_currency = 0
-	for tab_idx in 0..<UPGRADE_TAB_COUNT {
+	for tab_idx in 0 ..< UPGRADE_TAB_COUNT {
 		count := gs.upgrade_node_counts[tab_idx]
-		for node_idx in 0..<count {
+		for node_idx in 0 ..< count {
 			gs.upgrade_nodes[tab_idx][node_idx].purchased = node_idx == 0
 		}
 	}
@@ -206,7 +219,10 @@ reset_all_progress :: proc(gs: ^Game_State) {
 
 update_upgrades_input :: proc(gs: ^Game_State) {
 	if gs.reset_confirm_open {
-		if rl.IsKeyPressed(.A) || rl.IsKeyPressed(.LEFT) || rl.IsKeyPressed(.D) || rl.IsKeyPressed(.RIGHT) {
+		if rl.IsKeyPressed(.A) ||
+		   rl.IsKeyPressed(.LEFT) ||
+		   rl.IsKeyPressed(.D) ||
+		   rl.IsKeyPressed(.RIGHT) {
 			gs.reset_confirm_yes_selected = !gs.reset_confirm_yes_selected
 		}
 
@@ -275,8 +291,8 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	center_x := logical_width() / 2
 	screen_width := logical_width()
 
-	rl.DrawText("UPGRADES", center_x-100, 30, 40, rl.GOLD)
-	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), screen_width-180, 30, 30, rl.GOLD)
+	rl.DrawText("UPGRADES", center_x - 100, 30, 40, rl.GOLD)
+	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), screen_width - 180, 30, 30, rl.GOLD)
 
 	tree_x := center_x - 290
 	tree_w: i32 = 580
@@ -292,17 +308,17 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	right_key_x := tree_x + tree_w - key_hint_size - 10
 	rl.DrawRectangle(left_key_x, key_hint_y, key_hint_size, key_hint_size, rl.DARKGRAY)
 	rl.DrawRectangleLines(left_key_x, key_hint_y, key_hint_size, key_hint_size, rl.BLACK)
-	rl.DrawText("Q", left_key_x+8, key_hint_y+4, 20, rl.WHITE)
+	rl.DrawText("Q", left_key_x + 8, key_hint_y + 4, 20, rl.WHITE)
 	rl.DrawRectangle(right_key_x, key_hint_y, key_hint_size, key_hint_size, rl.DARKGRAY)
 	rl.DrawRectangleLines(right_key_x, key_hint_y, key_hint_size, key_hint_size, rl.BLACK)
-	rl.DrawText("E", right_key_x+8, key_hint_y+4, 20, rl.WHITE)
+	rl.DrawText("E", right_key_x + 8, key_hint_y + 4, 20, rl.WHITE)
 
-	for i in 0..<3 {
+	for i in 0 ..< 3 {
 		tab := tab_order[i]
-		tab_x := tree_x + i32(i)*tab_width
+		tab_x := tree_x + i32(i) * tab_width
 		current_tab_w := tab_width
 		if i == 2 {
-			current_tab_w = tree_w - tab_width*2
+			current_tab_w = tree_w - tab_width * 2
 		}
 		color := upgrade_tab_color(tab)
 		if gs.skill_tree_tab != tab {
@@ -311,7 +327,7 @@ draw_upgrades :: proc(gs: ^Game_State) {
 		rl.DrawRectangle(tab_x, tab_y, current_tab_w, tab_height, color)
 		tab_text := tab_names[i]
 		tab_text_w := rl.MeasureText(tab_text, 20)
-		rl.DrawText(tab_text, tab_x+(current_tab_w-tab_text_w)/2, tab_y+10, 20, rl.WHITE)
+		rl.DrawText(tab_text, tab_x + (current_tab_w - tab_text_w) / 2, tab_y + 10, 20, rl.WHITE)
 	}
 
 	tree_y: i32 = tab_y + tab_height + 20
@@ -326,9 +342,9 @@ draw_upgrades :: proc(gs: ^Game_State) {
 
 	clamp_upgrade_scroll(gs)
 
-	rl.BeginScissorMode(tree_x+1, tree_y+1, tree_w-2, tree_h-2)
+	rl.BeginScissorMode(tree_x + 1, tree_y + 1, tree_w - 2, tree_h - 2)
 
-	for i in 0..<count {
+	for i in 0 ..< count {
 		node := gs.upgrade_nodes[tab_idx][i]
 		if node.parent_index < 0 {
 			continue
@@ -348,13 +364,13 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	}
 
 	selected := gs.selected_upgrade_node[tab_idx]
-	for i in 0..<count {
+	for i in 0 ..< count {
 		node := gs.upgrade_nodes[tab_idx][i]
 		x := f32(center_x) + node.position.x
 		y := f32(tree_y) + node.position.y - gs.upgrade_scroll_y
 
-		rect_x := i32(x) - node_size/2
-		rect_y := i32(y) - node_size/2
+		rect_x := i32(x) - node_size / 2
+		rect_y := i32(y) - node_size / 2
 
 		locked := !upgrade_node_is_unlocked(gs, gs.skill_tree_tab, i)
 		fill := rl.Color([4]u8{45, 45, 55, 255})
@@ -383,22 +399,22 @@ draw_upgrades :: proc(gs: ^Game_State) {
 		info_w: i32 = 290
 		info_h: i32 = 118
 		info_x := node_screen_x + 45
-		if info_x+info_w > tree_x+tree_w {
+		if info_x + info_w > tree_x + tree_w {
 			info_x = node_screen_x - info_w - 45
 		}
-		info_y := node_screen_y - info_h/2
-		if info_y < tree_y+5 {
+		info_y := node_screen_y - info_h / 2
+		if info_y < tree_y + 5 {
 			info_y = tree_y + 5
 		}
-		if info_y+info_h > tree_y+tree_h-5 {
+		if info_y + info_h > tree_y + tree_h - 5 {
 			info_y = tree_y + tree_h - info_h - 5
 		}
 
 		rl.DrawRectangle(info_x, info_y, info_w, info_h, rl.Color([4]u8{18, 18, 26, 240}))
 		rl.DrawRectangleLines(info_x, info_y, info_w, info_h, active_color)
 
-		rl.DrawText(node.name, info_x+12, info_y+10, 22, rl.WHITE)
-		rl.DrawText(node.description, info_x+12, info_y+42, 16, rl.LIGHTGRAY)
+		rl.DrawText(node.name, info_x + 12, info_y + 10, 22, rl.WHITE)
+		rl.DrawText(node.description, info_x + 12, info_y + 42, 16, rl.LIGHTGRAY)
 
 		status_color := rl.GOLD
 		status_text := rl.TextFormat("Price: £%d", node.price)
@@ -412,20 +428,20 @@ draw_upgrades :: proc(gs: ^Game_State) {
 			status_color = rl.RED
 		}
 
-		rl.DrawText(status_text, info_x+12, info_y+82, 18, status_color)
+		rl.DrawText(status_text, info_x + 12, info_y + 82, 18, status_color)
 	}
 
 	upgrade_hint: cstring = "Q/E tab  WASD/Arrows move  Space/Enter buy  Esc back"
 	hint_w := rl.MeasureText(upgrade_hint, 16)
-	rl.DrawText(upgrade_hint, center_x-hint_w/2, logical_height()-50, 16, rl.WHITE)
+	rl.DrawText(upgrade_hint, center_x - hint_w / 2, logical_height() - 50, 16, rl.WHITE)
 
 	reset_hint: cstring = "R TO RESET"
 	reset_x: i32 = 20
 	reset_y := logical_height() - 50
-	rl.DrawText(reset_hint, reset_x-1, reset_y, 20, rl.BLACK)
-	rl.DrawText(reset_hint, reset_x+1, reset_y, 20, rl.BLACK)
-	rl.DrawText(reset_hint, reset_x, reset_y-1, 20, rl.BLACK)
-	rl.DrawText(reset_hint, reset_x, reset_y+1, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x - 1, reset_y, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x + 1, reset_y, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x, reset_y - 1, 20, rl.BLACK)
+	rl.DrawText(reset_hint, reset_x, reset_y + 1, 20, rl.BLACK)
 	rl.DrawText(reset_hint, reset_x, reset_y, 20, rl.RED)
 
 	if gs.reset_confirm_open {
@@ -433,17 +449,23 @@ draw_upgrades :: proc(gs: ^Game_State) {
 
 		popup_w: i32 = 560
 		popup_h: i32 = 220
-		popup_x := center_x - popup_w/2
-		popup_y := logical_height()/2 - popup_h/2
+		popup_x := center_x - popup_w / 2
+		popup_y := logical_height() / 2 - popup_h / 2
 
 		rl.DrawRectangle(popup_x, popup_y, popup_w, popup_h, rl.Color([4]u8{20, 20, 30, 250}))
 		rl.DrawRectangleLines(popup_x, popup_y, popup_w, popup_h, rl.RED)
 
 		title: cstring = "Reset all upgrades and money?"
 		title_w := rl.MeasureText(title, 30)
-		rl.DrawText(title, center_x-title_w/2, popup_y+30, 30, rl.WHITE)
+		rl.DrawText(title, center_x - title_w / 2, popup_y + 30, 30, rl.WHITE)
 
-		rl.DrawText("This action cannot be undone.", center_x-145, popup_y+78, 20, rl.LIGHTGRAY)
+		rl.DrawText(
+			"This action cannot be undone.",
+			center_x - 145,
+			popup_y + 78,
+			20,
+			rl.LIGHTGRAY,
+		)
 
 		yes_color := rl.GRAY
 		no_color := rl.GRAY
@@ -453,12 +475,18 @@ draw_upgrades :: proc(gs: ^Game_State) {
 			no_color = rl.GREEN
 		}
 
-		rl.DrawRectangleLines(center_x-150, popup_y+130, 120, 46, yes_color)
-		rl.DrawText("YES", center_x-111, popup_y+143, 24, yes_color)
+		rl.DrawRectangleLines(center_x - 150, popup_y + 130, 120, 46, yes_color)
+		rl.DrawText("YES", center_x - 111, popup_y + 143, 24, yes_color)
 
-		rl.DrawRectangleLines(center_x+30, popup_y+130, 120, 46, no_color)
-		rl.DrawText("NO", center_x+74, popup_y+143, 24, no_color)
+		rl.DrawRectangleLines(center_x + 30, popup_y + 130, 120, 46, no_color)
+		rl.DrawText("NO", center_x + 74, popup_y + 143, 24, no_color)
 
-		rl.DrawText("A/D or Left/Right to choose, Space/Enter to confirm", center_x-220, popup_y+188, 16, rl.WHITE)
+		rl.DrawText(
+			"A/D or Left/Right to choose, Space/Enter to confirm",
+			center_x - 220,
+			popup_y + 188,
+			16,
+			rl.WHITE,
+		)
 	}
 }

@@ -89,11 +89,14 @@ spawn_enemy :: proc(gs: ^Game_State) {
 	new_enemy := Enemy{}
 	new_enemy.color = Enemy_Color(rl.GetRandomValue(0, 2))
 	new_enemy.kind = Enemy_Kind(rl.GetRandomValue(0, 2))
-	new_enemy.is_large = gs.elapsed_time >= LARGE_SPAWN_MIN_TIME && rl.GetRandomValue(0, LARGE_SPAWN_CHANCE - 1) == 0
+	new_enemy.is_large =
+		gs.elapsed_time >= LARGE_SPAWN_MIN_TIME &&
+		rl.GetRandomValue(0, LARGE_SPAWN_CHANCE - 1) == 0
 
 	base_size: f32 = 30
 	new_enemy.size = new_enemy.is_large ? base_size * LARGE_SIZE_MULT : base_size
-	new_enemy.max_health = new_enemy.is_large ? gs.base_enemy_health * LARGE_HEALTH_MULT : gs.base_enemy_health
+	new_enemy.max_health =
+		new_enemy.is_large ? gs.base_enemy_health * LARGE_HEALTH_MULT : gs.base_enemy_health
 	new_enemy.health = new_enemy.max_health
 
 	if new_enemy.kind == .Triangle {
@@ -134,13 +137,15 @@ move_toward_player :: proc(enemy: ^Enemy, player_pos: Vector2, speed: f32) {
 update_triangle_enemy :: proc(enemy: ^Enemy, player_pos: Vector2, dt, speed_mult: f32) {
 	enemy.timer -= dt
 	switch enemy.phase {
-	case 0: // approach
+	case 0:
+		// approach
 		move_toward_player(enemy, player_pos, TRIANGLE_APPROACH_SPEED * speed_mult)
 		if enemy.timer <= 0 {
 			enemy.phase = 1
 			enemy.timer = TRIANGLE_CHARGE_DUR
 		}
-	case 1: // charge in place, lock dash direction when it ends
+	case 1:
+		// charge in place, lock dash direction when it ends
 		if enemy.timer <= 0 {
 			dx := player_pos.x - enemy.position.x
 			dy := player_pos.y - enemy.position.y
@@ -149,7 +154,8 @@ update_triangle_enemy :: proc(enemy: ^Enemy, player_pos: Vector2, dt, speed_mult
 			enemy.phase = 2
 			enemy.timer = TRIANGLE_DASH_DUR
 		}
-	case 2: // dash along the locked direction (full speed even for large, so the lunge still connects)
+	case 2:
+		// dash along the locked direction (full speed even for large, so the lunge still connects)
 		enemy.position.x += enemy.velocity.x * TRIANGLE_DASH_SPEED
 		enemy.position.y += enemy.velocity.y * TRIANGLE_DASH_SPEED
 		if enemy.timer <= 0 {
@@ -311,12 +317,12 @@ update_menu_input :: proc(gs: ^Game_State) -> bool {
 	if rl.IsKeyPressed(.UP) || rl.IsKeyPressed(.W) {
 		gs.menu_selection -= 1
 		if gs.menu_selection < 0 {
-			gs.menu_selection = 2
+			gs.menu_selection = MENU_OPTION_MAX
 		}
 	}
 	if rl.IsKeyPressed(.DOWN) || rl.IsKeyPressed(.S) {
 		gs.menu_selection += 1
-		if gs.menu_selection > 2 {
+		if gs.menu_selection > MENU_OPTION_MAX {
 			gs.menu_selection = 0
 		}
 	}
