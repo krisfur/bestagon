@@ -292,7 +292,7 @@ draw_upgrades :: proc(gs: ^Game_State) {
 	screen_width := logical_width()
 
 	rl.DrawText("UPGRADES", center_x - 100, 30, 40, rl.GOLD)
-	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), screen_width - 180, 30, 30, rl.GOLD)
+	rl.DrawText(fmt_int("£", gs.total_currency), screen_width - 180, 30, 30, rl.GOLD)
 
 	tree_x := center_x - 290
 	tree_w: i32 = 580
@@ -417,7 +417,7 @@ draw_upgrades :: proc(gs: ^Game_State) {
 		rl.DrawText(node.description, info_x + 12, info_y + 42, 16, rl.LIGHTGRAY)
 
 		status_color := rl.GOLD
-		status_text := rl.TextFormat("Price: £%d", node.price)
+		status_text := fmt_int("Price: £", node.price)
 		if node.purchased {
 			status_text = "Purchased"
 			status_color = rl.GREEN

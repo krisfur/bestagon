@@ -87,16 +87,16 @@ draw_menu :: proc(gs: ^Game_State, is_game_over: bool) {
 		survived_total_seconds := i32(gs.elapsed_time)
 		survived_minutes := survived_total_seconds / 60
 		survived_seconds := survived_total_seconds % 60
-		survived_text := rl.TextFormat("Survived: %02d:%02d", survived_minutes, survived_seconds)
+		survived_text := fmt_time("Survived: ", survived_minutes, survived_seconds)
 		survived_w := rl.MeasureText(survived_text, 25)
 		rl.DrawText(survived_text, center_x - survived_w / 2, center_y - 60, 25, rl.WHITE)
 
-		earned_text := rl.TextFormat("Earned: £%d", gs.session_currency)
+		earned_text := fmt_int("Earned: £", gs.session_currency)
 		earned_w := rl.MeasureText(earned_text, 25)
 		rl.DrawText(earned_text, center_x - earned_w / 2, center_y - 95, 25, rl.GOLD)
 	}
 
-	total_text := rl.TextFormat("£%d", gs.total_currency)
+	total_text := fmt_int("£", gs.total_currency)
 	total_w := rl.MeasureText(total_text, 40)
 	rl.DrawText(total_text, center_x - total_w / 2, center_y - 10, 40, rl.GOLD)
 
@@ -175,21 +175,15 @@ draw_playing :: proc(gs: ^Game_State) {
 	elapsed_minutes := elapsed_total_seconds / 60
 	elapsed_seconds := elapsed_total_seconds % 60
 	rl.DrawText(
-		rl.TextFormat("Time: %02d:%02d", elapsed_minutes, elapsed_seconds),
+		fmt_time("Time: ", elapsed_minutes, elapsed_seconds),
 		10,
 		logical_height() - 30,
 		20,
 		rl.WHITE,
 	)
 
-	rl.DrawText(rl.TextFormat("£%d", gs.total_currency), logical_width() - 180, 10, 20, rl.GOLD)
-	rl.DrawText(
-		rl.TextFormat("Session: £%d", gs.session_currency),
-		logical_width() - 180,
-		40,
-		16,
-		rl.RED,
-	)
+	rl.DrawText(fmt_int("£", gs.total_currency), logical_width() - 180, 10, 20, rl.GOLD)
+	rl.DrawText(fmt_int("Session: £", gs.session_currency), logical_width() - 180, 40, 16, rl.RED)
 }
 
 draw_paused :: proc(gs: ^Game_State) {
